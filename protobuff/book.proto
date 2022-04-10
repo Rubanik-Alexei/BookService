@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option go_package="/protobuff";
+
+service BookService{
+    rpc SearchBook(BookName) returns (Books);
+    rpc SearchAuthor(SearchAuthorRequest) returns (Books);
+}
+
+message BookName{
+    string BookName = 1;
+}
+
+message SearchAuthorRequest{
+    string Authors = 1;
+}
+
+message Books{
+    repeated BookInfo Book = 1;
+}
+
+message BookInfo{
+    string Name = 1;
+    repeated string Authors = 2;
+}
