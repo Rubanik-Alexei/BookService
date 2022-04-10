@@ -7,7 +7,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//grpcurl --plaintext -d '{"Authors":"Dave Cheney"}' localhost:9092 BookService.SearchAuthor
+//commands for manual testing
+//grpcurl --plaintext -d '{"Authors":"Martin Kleppman"}' localhost:9092 BookService.SearchAuthor
 //grpcurl --plaintext -d '{"BookName":"Golang"}' localhost:9092 BookService.SearchBook
 
 //entity for Database
@@ -55,6 +56,7 @@ func (s *Server) SearchBook(ctx context.Context, req *protobuff.BookName) (*prot
 		s.log.Error("Error with SearchBook request:" + err.Error())
 		return nil, err
 	}
+	//quering with statement
 	rows, err := stmt.Query(book)
 	if err != nil {
 		s.log.Error("Error with SearchBook request:" + err.Error())
@@ -119,6 +121,7 @@ func (s *Server) SearchAuthor(ctx context.Context, req *protobuff.SearchAuthorRe
 	if err != nil {
 		return nil, err
 	}
+	//quering with statement
 	rows, err := stmt.Query(author)
 	if err != nil {
 		return nil, err

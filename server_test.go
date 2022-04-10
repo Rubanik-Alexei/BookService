@@ -39,18 +39,22 @@ func bufDialer(context.Context, string) (net.Conn, error) {
 //testing successful SearchBook request
 func TestSearchBook(t *testing.T) {
 	ctx := context.Background()
+	//creating test connect
 	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
 	if err != nil {
 		t.Fatalf("Failed to dial bufnet: %v", err)
 	}
 	defer conn.Close()
+	//creating grpc client of the service
 	client := protobuff.NewBookServiceClient(conn)
+	//creating sqlmock instance for mocking db query
 	var mock sqlmock.Sqlmock
 	db, mock, err = sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error'%s' was not expected when opening a stub database connection", err)
 	}
 	defer db.Close()
+	//mocking prepared statement
 	prep := mock.ExpectPrepare(regexp.QuoteMeta(`SELECT books.book_id, books.name, authors.name
 	FROM books
 		INNER JOIN book_author
@@ -59,15 +63,16 @@ func TestSearchBook(t *testing.T) {
 		ON authors.author_id = book_author.author_id
         where books.name = ?
         group by books.book_id,authors.name;`))
+	//mocking querying of the statement
 	prep.ExpectQuery().WithArgs("Designing Data-Intensive Applications").WillReturnRows(sqlmock.NewRows([]string{"2", "Designing Data-Intensive Applications", "Martin Kleppman"}))
 	resp := &protobuff.Books{}
+	//making grpc request to see if it works correctly
 	if resp, err = client.SearchBook(ctx, &protobuff.BookName{BookName: "Designing Data-Intensive Applications"}); err != nil {
 		t.Fatalf("SearchBook failed: %v", err)
 	}
+	//checking expectations for mocked query
 	if err := mock.ExpectationsWereMet(); err != nil {
-
 		t.Errorf("there were unfulfilled expectations: %s", err)
-
 	}
 	log.Printf("Response: %+v", resp)
 }
@@ -75,18 +80,22 @@ func TestSearchBook(t *testing.T) {
 //testing successful SearchAuthor request
 func TestSearchAuthor(t *testing.T) {
 	ctx := context.Background()
+	//creating test connect
 	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
 	if err != nil {
 		t.Fatalf("Failed to dial bufnet: %v", err)
 	}
 	defer conn.Close()
+	//creating grpc client of the service
 	client := protobuff.NewBookServiceClient(conn)
+	//creating sqlmock instance for mocking db query
 	var mock sqlmock.Sqlmock
 	db, mock, err = sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error'%s' was not expected when opening a stub database connection", err)
 	}
 	defer db.Close()
+	//mocking prepared statement
 	prep := mock.ExpectPrepare(regexp.QuoteMeta(`SELECT books.book_id, books.name, authors.name
 	FROM books
 		INNER JOIN book_author
@@ -95,15 +104,16 @@ func TestSearchAuthor(t *testing.T) {
 		ON authors.author_id = book_author.author_id
         where authors.name = ?
         group by books.book_id,authors.name;`))
+	//mocking querying of the statement
 	prep.ExpectQuery().WithArgs("Rob Pike").WillReturnRows(sqlmock.NewRows([]string{"1", "Golang", "Rob Pike"}))
 	resp := &protobuff.Books{}
+	//making grpc request to see if it works correctly
 	if resp, err = client.SearchAuthor(ctx, &protobuff.SearchAuthorRequest{Authors: "Rob Pike"}); err != nil {
 		t.Fatalf("SearchAuthor failed: %v", err)
 	}
+	//checking expectations for mocked query
 	if err := mock.ExpectationsWereMet(); err != nil {
-
 		t.Errorf("there were unfulfilled expectations: %s", err)
-
 	}
 	log.Printf("Response: %+v", resp)
 }
